@@ -1,0 +1,79 @@
+﻿@model IEnumerable<FitnessTracker.Models.MacroEntry>
+
+@{
+    ViewData["Title"] = "Today's Macro Summary";
+    // summary is an anonymous object with Carbs, Protein, Fat, Calories
+    var summary = ViewBag.Summary;
+    var today = DateTime.Today;
+}
+
+<h1>@ViewData["Title"]</h1>
+
+<div class="mb-4">
+    <a asp-action="Create" class="btn btn-primary">Add New Entry</a>
+    <a asp-action="Index" class="btn btn-secondary">All Entries</a>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header">
+        <strong>Totals for @today.ToString("yyyy-MM-dd")</strong>
+    </div>
+    <div class="card-body">
+        <div class="row text-center">
+            <div class="col">
+                <h5>@summary.Carbs g</h5>
+                <p>Carbs</p>
+            </div>
+            <div class="col">
+                <h5>@summary.Protein g</h5>
+                <p>Protein</p>
+            </div>
+            <div class="col">
+                <h5>@summary.Fat g</h5>
+                <p>Fat</p>
+            </div>
+            <div class="col">
+                <h5>@summary.Calories kcal</h5>
+                <p>Calories</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info">
+        No macro entries for today yet.
+    </div>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Carbs (g)</th>
+                <th>Protein (g)</th>
+                <th>Fat (g)</th>
+                <th>Calories</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var entry in Model)
+            {
+                <tr>
+                    <td>@entry.Date.ToString("yyyy-MM-dd")</td>
+                    <td>@entry.CarbsGrams</td>
+                    <td>@entry.ProteinGrams</td>
+                    <td>@entry.FatGrams</td>
+                    <td>@(entry.CarbsGrams * 4 + entry.ProteinGrams * 4 + entry.FatGrams * 9)</td>
+                    <td>
+                        <a asp-action="Edit" asp-route-id="@entry.Id" class="btn btn-sm btn-outline-secondary">Edit</a>
+                        <a asp-action="Delete" asp-route-id="@entry.Id" class="btn btn-sm btn-outline-danger">Delete</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

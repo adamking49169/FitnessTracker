@@ -1,0 +1,40 @@
+﻿// Services/ApiNinjasCalorieService.cs
+using FitnessTracker.Models;
+using FitnessTracker.Services;
+using Microsoft.Extensions.Configuration;
+using System;
+using System.Collections.Generic;
+using System.Net.Http;
+using System.Text.Json;
+using System.Threading.Tasks;
+
+public class ApiNinjasCalorieService : ICalorieService
+{
+    private readonly HttpClient _client;
+    private readonly string _apiKey;
+
+    public ApiNinjasCalorieService(HttpClient client, IConfiguration config)
+    {
+        _client = client;
+        _apiKey = config["ApiNinjas:Key"];
+        // e.g. in appsettings.json:
+        // "ApiNinjas": { "Key": "YOUR_KEY_HERE" }
+
+        // BaseAddress can be set in DI
+    }
+
+    public async Task<int> GetCaloriesBurnedAsync(string activity, int weightKg, int durationMin)
+    {
+        var url = $"v1/caloriesburned?activity={Uri.EscapeDataString(activity)}" +
+                  $"&weight={weightKg}&duration={durationMin}";
+        using var req = new HttpRequestMessage(HttpMethod.Get, url);
+        req.Headers.Add("X-Api-Key", _apiKey);
+
+        using var res = await _client.SendAsync(req);
+        res.EnsureSuccessStatusCode();
+
+        var json = await res.Content.ReadAsStringAsync();
+        var list = JsonSerializer.Deserialize<List<CaloriesResult>>(json);
+        return list?[0]?.total_calories ?? 0;
+    }
+}
