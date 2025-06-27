@@ -1,5 +1,4 @@
-﻿// Models/WgerResponse.cs
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace FitnessTracker.Models
 {

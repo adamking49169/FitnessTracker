@@ -10,24 +10,32 @@
 <form asp-action="Create">
     @Html.AntiForgeryToken()
 
-    @* hidden fields for userId & date *@
+    @* hidden fields *@
     @Html.HiddenFor(m => m.UserId)
     @Html.HiddenFor(m => m.Date)
 
-    <div class="form-group">
-        <label asp-for="Name">Exercise</label>
-        <select asp-for="Name"
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+    <div class="form-group mb-3">
+        <label asp-for="ExerciseId">Exercise</label>
+        <select asp-for="ExerciseId"
                 class="form-control"
                 asp-items="ViewBag.Exercises">
             <option value="">-- Select an exercise --</option>
         </select>
-        <span asp-validation-for="Name" class="text-danger"></span>
+        <span asp-validation-for="ExerciseId" class="text-danger"></span>
     </div>
 
-    <div class="form-group">
-        <label asp-for="DurationMinutes">Duration (min)</label>
+    <div class="form-group mb-3">
+        <label asp-for="DurationMinutes">Duration (minutes)</label>
         <input asp-for="DurationMinutes" class="form-control" />
         <span asp-validation-for="DurationMinutes" class="text-danger"></span>
+    </div>
+
+    <div class="form-group mb-3">
+        <label asp-for="UserWeightKg">Your Weight (kg)</label>
+        <input asp-for="UserWeightKg" class="form-control" />
+        <span asp-validation-for="UserWeightKg" class="text-danger"></span>
     </div>
 
     <button type="submit" class="btn btn-primary">Log Workout</button>

@@ -1,5 +1,4 @@
-﻿// Services/WgerService.cs
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Json;
@@ -15,11 +14,13 @@ namespace FitnessTracker.Services
 
         public async Task<IEnumerable<ExerciseDto>> GetExercisesAsync(int page = 1)
         {
-            // now calling the /exerciseinfo/ endpoint which returns "name" for each exercise:
             var url = $"/api/v2/exerciseinfo/?language=2&page={page}&format=json";
-
             var resp = await _client.GetFromJsonAsync<WgerResponse<ExerciseDto>>(url);
-            return resp?.Results ?? new List<ExerciseDto>();
+
+            return resp != null
+                ? resp.Results                 // List<ExerciseDto>
+                : Array.Empty<ExerciseDto>();  // ExerciseDto[]
         }
+
     }
 }
