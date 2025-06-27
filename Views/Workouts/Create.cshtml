@@ -7,17 +7,21 @@
 
 <h1>@ViewData["Title"]</h1>
 
-<form asp-action="Create">
+<p>
+    <a asp-action="Index" class="btn btn-secondary">← Back to Workouts</a>
+</p>
+
+<form asp-action="Create" method="post">
     @Html.AntiForgeryToken()
 
-    @* hidden fields *@
+    @* Hidden fields for UserId & Date *@
     @Html.HiddenFor(m => m.UserId)
     @Html.HiddenFor(m => m.Date)
 
-    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
     <div class="form-group mb-3">
-        <label asp-for="ExerciseId">Exercise</label>
+        <label asp-for="ExerciseId" class="form-label">Exercise</label>
         <select asp-for="ExerciseId"
                 class="form-control"
                 asp-items="ViewBag.Exercises">
@@ -27,13 +31,13 @@
     </div>
 
     <div class="form-group mb-3">
-        <label asp-for="DurationMinutes">Duration (minutes)</label>
+        <label asp-for="DurationMinutes" class="form-label">Duration (minutes)</label>
         <input asp-for="DurationMinutes" class="form-control" />
         <span asp-validation-for="DurationMinutes" class="text-danger"></span>
     </div>
 
     <div class="form-group mb-3">
-        <label asp-for="UserWeightKg">Your Weight (kg)</label>
+        <label asp-for="UserWeightKg" class="form-label">Your Weight (kg)</label>
         <input asp-for="UserWeightKg" class="form-control" />
         <span asp-validation-for="UserWeightKg" class="text-danger"></span>
     </div>
