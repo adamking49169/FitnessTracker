@@ -15,7 +15,9 @@ namespace FitnessTracker.Services
         public async Task<IEnumerable<ExerciseDto>> GetExercisesAsync(int page = 1)
         {
             // Call the /exercise/ endpoint (not exerciseinfo)
-            var url = $"/api/v2/exercise/?language=2&status=2&page={page}&format=json";
+            // Use the exerciseinfo endpoint to get translated names
+            var url = $"/api/v2/exerciseinfo/?language=2&status=2&page=1&format=json";
+
 
             var resp = await _client.GetFromJsonAsync<WgerResponse<ExerciseDto>>(url);
             // filter out any stray blanks just in case
