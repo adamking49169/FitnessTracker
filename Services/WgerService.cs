@@ -4,6 +4,7 @@ using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
 using FitnessTracker.Models;
+using System.Text.Json;
 
 namespace FitnessTracker.Services
 {
@@ -16,11 +17,21 @@ namespace FitnessTracker.Services
         {
             // Call the /exercise/ endpoint (not exerciseinfo)
             // Use the exerciseinfo endpoint to get translated names
-            var url = $"/api/v2/exerciseinfo/?language=2&status=2&page=1&format=json";
+            var url = $"/api/v2/exercise/?language=2&status=2&page={page}&format=json";
 
+            var httpResp = await _client.GetAsync(url);
+            Console.WriteLine($"Status: {httpResp.StatusCode}");
+            string json = string.Empty;
+            if (httpResp.IsSuccessStatusCode)
+            {
+                json = await httpResp.Content.ReadAsStringAsync();
+                Console.WriteLine(json);
+            }
 
-            var resp = await _client.GetFromJsonAsync<WgerResponse<ExerciseDto>>(url);
-            // filter out any stray blanks just in case
+            var resp = string.IsNullOrEmpty(json)
+               ? null
+               : JsonSerializer.Deserialize<WgerResponse<ExerciseDto>>(json);
+
             if (resp == null) return new List<ExerciseDto>();
 
             return resp.Results
