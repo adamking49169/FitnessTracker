@@ -8,9 +8,11 @@ using FitnessTracker.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
 
 namespace FitnessTracker.Controllers
 {
+    [Authorize]
     public class WorkoutsController : Controller
     {
         private readonly ApplicationDbContext _context;
