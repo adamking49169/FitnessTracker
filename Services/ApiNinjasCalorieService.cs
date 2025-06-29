@@ -25,16 +25,25 @@ public class ApiNinjasCalorieService : ICalorieService
 
     public async Task<int> GetCaloriesBurnedAsync(string activity, int weightKg, int durationMin)
     {
-        var url = $"v1/caloriesburned?activity={Uri.EscapeDataString(activity)}" +
-                  $"&weight={weightKg}&duration={durationMin}";
+        var url = $"v1/caloriesburned?activity={Uri.EscapeDataString(activity)}"
+                  + $"&weight={weightKg}&duration={durationMin}";
         using var req = new HttpRequestMessage(HttpMethod.Get, url);
         req.Headers.Add("X-Api-Key", _apiKey);
 
-        using var res = await _client.SendAsync(req);
-        res.EnsureSuccessStatusCode();
+        try
+        {
+            using var res = await _client.SendAsync(req);
+            if (!res.IsSuccessStatusCode)
+                return 0;
 
-        var json = await res.Content.ReadAsStringAsync();
-        var list = JsonSerializer.Deserialize<List<CaloriesResult>>(json);
-        return list?[0]?.total_calories ?? 0;
+            var json = await res.Content.ReadAsStringAsync();
+            var list = JsonSerializer.Deserialize<List<CaloriesResult>>(json);
+            return list?[0]?.total_calories ?? 0;
+        }
+        catch (Exception ex) when (ex is HttpRequestException || ex is TaskCanceledException || ex is JsonException)
+        {
+            Console.Error.WriteLine($"ApiNinjas error: {ex.Message}");
+            return 0;
+        }
     }
 }

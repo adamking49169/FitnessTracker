@@ -4,6 +4,7 @@ using System.Net.Http;
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Threading.Tasks;
+using System.Linq;
 using FitnessTracker.Models;
 
 namespace FitnessTracker.Services
@@ -15,35 +16,36 @@ namespace FitnessTracker.Services
 
         public async Task<IEnumerable<ExerciseDto>> GetExercisesAsync(int page = 1)
         {
-            // Use the exerciseinfo endpoint which includes translations. Each
+            // Use the exerciseinfo endpoint which includes translations.
             // translation contains the exercise name for a specific language.
             var url = $"/api/v2/exerciseinfo/?language=2&status=2&page={page}&format=json";
 
-            // diagnostic call to inspect the raw response
-            var httpResp = await _client.GetAsync(url);
-            Console.WriteLine($"Status: {httpResp.StatusCode}");
-            string json = string.Empty;
-            if (httpResp.IsSuccessStatusCode)
+            try
             {
-                json = await httpResp.Content.ReadAsStringAsync();
-                Console.WriteLine(json);
+                var httpResp = await _client.GetAsync(url);
+                if (!httpResp.IsSuccessStatusCode)
+                    return new List<ExerciseDto>();
+
+                var json = await httpResp.Content.ReadAsStringAsync();
+                var resp = JsonSerializer.Deserialize<WgerResponse<ExerciseInfoDto>>(json);
+                if (resp == null) return new List<ExerciseDto>();
+
+                return resp.Results
+                          .Select(r =>
+                          {
+                              var t = r.Translations.FirstOrDefault(tr => tr.Language == 2);
+                              return t == null
+                                  ? null
+                                  : new ExerciseDto { Id = r.Id, Name = t.Name, NameOriginal = t.Name };
+                          })
+                          .Where(e => e != null && !string.IsNullOrWhiteSpace(e.Name))
+                          .ToList()!;
             }
-
-            var resp = string.IsNullOrEmpty(json)
-                ? null
-                : JsonSerializer.Deserialize<WgerResponse<ExerciseInfoDto>>(json);
-            if (resp == null) return new List<ExerciseDto>();
-
-            return resp.Results
-                      .Select(r =>
-                      {
-                          var t = r.Translations.FirstOrDefault(tr => tr.Language == 2);
-                          return t == null
-                              ? null
-                              : new ExerciseDto { Id = r.Id, Name = t.Name, NameOriginal = t.Name };
-                      })
-                      .Where(e => e != null && !string.IsNullOrWhiteSpace(e.Name))
-                      .ToList()!;
+            catch (Exception ex) when (ex is HttpRequestException || ex is TaskCanceledException || ex is JsonException)
+            {
+                Console.Error.WriteLine($"Wger error: {ex.Message}");
+                return new List<ExerciseDto>();
+            }
         }
 
     }
