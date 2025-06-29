@@ -17,10 +17,7 @@ namespace FitnessTracker.Controllers
         private readonly IWgerService _wger;
         private readonly ICalorieService _calories;
 
-        public WorkoutsController(
-            ApplicationDbContext context,
-            IWgerService wgerService,
-            ICalorieService calorieService)
+        public WorkoutsController(ApplicationDbContext context, IWgerService wgerService, ICalorieService calorieService)
         {
             _context = context;
             _wger = wgerService;
@@ -32,8 +29,8 @@ namespace FitnessTracker.Controllers
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var items = _context.Workouts
-                                 .Where(w => w.UserId == userId)
-                                 .Include(w => w.Exercise);
+                                .Where(w => w.UserId == userId)
+                                .Include(w => w.Exercise);
             return View(await items.ToListAsync());
         }
 
@@ -56,7 +53,6 @@ namespace FitnessTracker.Controllers
         {
             var model = new Workout
             {
-                UserId = User.FindFirstValue(ClaimTypes.NameIdentifier),
                 Date = DateTime.Today,
                 UserWeightKg = 0
             };
@@ -68,10 +64,12 @@ namespace FitnessTracker.Controllers
 
         // POST: Workouts/Create
         [HttpPost, ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(Workout workout)
+        public async Task<IActionResult> Create([Bind("Date,DurationMinutes,UserWeightKg,ExerciseId")] Workout workout)
         {
+            // Assign the logged-in user
             workout.UserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            workout.Date = DateTime.Today;
+            // Remove any ModelState errors for UserId
+            ModelState.Remove(nameof(workout.UserId));
 
             if (!ModelState.IsValid)
             {
@@ -80,19 +78,18 @@ namespace FitnessTracker.Controllers
                 return View(workout);
             }
 
-            // look up the selected exercise so we can pass its name to the calorie service
-            var exercise = (await _wger.GetExercisesAsync())
-                           .FirstOrDefault(e => e.Id == workout.ExerciseId);
+            // Lookup and validate exercise
+            var exercise = (await _wger.GetExercisesAsync()).FirstOrDefault(e => e.Id == workout.ExerciseId);
             if (exercise == null)
             {
                 ModelState.AddModelError(nameof(workout.ExerciseId), "Invalid exercise selected");
-                var exercises = await _wger.GetExercisesAsync();
-                ViewBag.Exercises = new SelectList(exercises, "Id", "Name", workout.ExerciseId);
+                var exercises2 = await _wger.GetExercisesAsync();
+                ViewBag.Exercises = new SelectList(exercises2, "Id", "Name", workout.ExerciseId);
                 return View(workout);
             }
 
-            var existingExercise = await _context.Exercises.FindAsync(exercise.Id);
-            if (existingExercise == null)
+            // Ensure exercise exists in local DB
+            if (await _context.Exercises.FindAsync(exercise.Id) == null)
             {
                 using var tx = await _context.Database.BeginTransactionAsync();
                 await _context.Database.ExecuteSqlRawAsync("SET IDENTITY_INSERT Exercises ON");
@@ -102,12 +99,11 @@ namespace FitnessTracker.Controllers
                 await tx.CommitAsync();
             }
 
-            // fetch calories burned
-            workout.CaloriesBurned = await _calories
-                .GetCaloriesBurnedAsync(
-                    exercise.Name,
-                    workout.UserWeightKg,
-                    workout.DurationMinutes);
+            // Fetch calories burned
+            workout.CaloriesBurned = await _calories.GetCaloriesBurnedAsync(
+                exercise.Name,
+                workout.UserWeightKg,
+                workout.DurationMinutes);
 
             _context.Add(workout);
             await _context.SaveChangesAsync();
@@ -132,17 +128,18 @@ namespace FitnessTracker.Controllers
 
         // POST: Workouts/Edit/5
         [HttpPost, ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, Workout workout)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Date,DurationMinutes,UserWeightKg,ExerciseId")] Workout workout)
         {
             if (id != workout.Id) return NotFound();
 
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var exists = await _context.Workouts
-                .AsNoTracking()
-                .AnyAsync(w => w.Id == id && w.UserId == userId);
-            if (!exists) return NotFound();
+            if (!await _context.Workouts.AsNoTracking().AnyAsync(w => w.Id == id && w.UserId == userId))
+                return NotFound();
 
+            // Assign user and clear ModelState error
             workout.UserId = userId;
+            ModelState.Remove(nameof(workout.UserId));
+            // Normalize date
             workout.Date = workout.Date.Date;
 
             if (!ModelState.IsValid)
@@ -152,32 +149,32 @@ namespace FitnessTracker.Controllers
                 return View(workout);
             }
 
-            var exercise = (await _wger.GetExercisesAsync())
-                           .FirstOrDefault(e => e.Id == workout.ExerciseId);
-            if (exercise == null)
+            // Lookup and validate exercise
+            var exercise2 = (await _wger.GetExercisesAsync()).FirstOrDefault(e => e.Id == workout.ExerciseId);
+            if (exercise2 == null)
             {
                 ModelState.AddModelError(nameof(workout.ExerciseId), "Invalid exercise selected");
-                var exercises = await _wger.GetExercisesAsync();
-                ViewBag.Exercises = new SelectList(exercises, "Id", "Name", workout.ExerciseId);
+                var exercises3 = await _wger.GetExercisesAsync();
+                ViewBag.Exercises = new SelectList(exercises3, "Id", "Name", workout.ExerciseId);
                 return View(workout);
             }
 
-            var existingExercise = await _context.Exercises.FindAsync(exercise.Id);
-            if (existingExercise == null)
+            // Ensure exercise exists locally
+            if (await _context.Exercises.FindAsync(exercise2.Id) == null)
             {
                 using var tx = await _context.Database.BeginTransactionAsync();
                 await _context.Database.ExecuteSqlRawAsync("SET IDENTITY_INSERT Exercises ON");
-                _context.Exercises.Add(exercise);
+                _context.Exercises.Add(exercise2);
                 await _context.SaveChangesAsync();
                 await _context.Database.ExecuteSqlRawAsync("SET IDENTITY_INSERT Exercises OFF");
                 await tx.CommitAsync();
             }
 
-            workout.CaloriesBurned = await _calories
-                .GetCaloriesBurnedAsync(
-                    exercise.Name,
-                    workout.UserWeightKg,
-                    workout.DurationMinutes);
+            // Fetch calories
+            workout.CaloriesBurned = await _calories.GetCaloriesBurnedAsync(
+                exercise2.Name,
+                workout.UserWeightKg,
+                workout.DurationMinutes);
 
             try
             {
@@ -186,8 +183,7 @@ namespace FitnessTracker.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!await _context.Workouts
-                    .AnyAsync(w => w.Id == id && w.UserId == userId))
+                if (!await _context.Workouts.AnyAsync(w => w.Id == id && w.UserId == userId))
                     return NotFound();
                 throw;
             }
