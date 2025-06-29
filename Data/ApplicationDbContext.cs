@@ -12,5 +12,6 @@ namespace FitnessTracker.Data
         }
         public DbSet<Workout> Workouts { get; set; }
         public DbSet<MacroEntry> MacroEntries { get; set; }
+        public DbSet<ExerciseDto> Exercises { get; set; }
     }
 }

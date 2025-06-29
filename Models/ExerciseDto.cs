@@ -9,5 +9,7 @@ namespace FitnessTracker.Models
 
         [JsonPropertyName("name")]
         public string Name { get; set; } = string.Empty;
+        [JsonPropertyName("name_original")]
+        public string NameOriginal { get; set; } = string.Empty;
     }
 }

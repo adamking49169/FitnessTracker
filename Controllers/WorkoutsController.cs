@@ -91,6 +91,13 @@ namespace FitnessTracker.Controllers
                 return View(workout);
             }
 
+            var existingExercise = await _context.Exercises.FindAsync(exercise.Id);
+            if (existingExercise == null)
+            {
+                _context.Exercises.Add(exercise);
+                await _context.SaveChangesAsync();
+            }
+
             // fetch calories burned
             workout.CaloriesBurned = await _calories
                 .GetCaloriesBurnedAsync(
@@ -149,6 +156,13 @@ namespace FitnessTracker.Controllers
                 var exercises = await _wger.GetExercisesAsync();
                 ViewBag.Exercises = new SelectList(exercises, "Id", "Name", workout.ExerciseId);
                 return View(workout);
+            }
+
+            var existingExercise = await _context.Exercises.FindAsync(exercise.Id);
+            if (existingExercise == null)
+            {
+                _context.Exercises.Add(exercise);
+                await _context.SaveChangesAsync();
             }
 
             workout.CaloriesBurned = await _calories
