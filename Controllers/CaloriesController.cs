@@ -14,7 +14,12 @@ namespace FitnessTracker.Controllers
         {
             _service = service;
         }
-
+        [HttpGet("activities")]
+        public async Task<IActionResult> GetActivities()
+        {
+            var activities = await _service.GetActivitiesAsync();
+            return Ok(activities);
+        }
         [HttpGet]
         public async Task<IActionResult> Get(string activity, int weightKg, int durationMinutes)
         {

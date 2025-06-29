@@ -49,4 +49,26 @@ public class ApiNinjasCalorieService : ICalorieService
             return 0;
         }
     }
+    public async Task<IEnumerable<string>> GetActivitiesAsync()
+    {
+        const string url = "v1/caloriesburnedactivities";
+        using var req = new HttpRequestMessage(HttpMethod.Get, url);
+        req.Headers.Add("X-Api-Key", _apiKey);
+
+        try
+        {
+            using var res = await _client.SendAsync(req);
+            if (!res.IsSuccessStatusCode)
+                return new List<string>();
+
+            var json = await res.Content.ReadAsStringAsync();
+            var list = JsonSerializer.Deserialize<List<string>>(json);
+            return list ?? new List<string>();
+        }
+        catch (Exception ex) when (ex is HttpRequestException || ex is TaskCanceledException || ex is JsonException)
+        {
+            Console.Error.WriteLine($"ApiNinjas error: {ex.Message}");
+            return new List<string>();
+        }
+    }
 }
