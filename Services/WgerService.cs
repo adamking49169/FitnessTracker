@@ -14,12 +14,14 @@ namespace FitnessTracker.Services
 
         public async Task<IEnumerable<ExerciseDto>> GetExercisesAsync(int page = 1)
         {
-            var url = $"/api/v2/exerciseinfo/?language=2&page={page}&format=json";
-            var resp = await _client.GetFromJsonAsync<WgerResponse<ExerciseDto>>(url);
+            // Call the /exercise/ endpoint (not exerciseinfo)
+            var url = $"/api/v2/exercise/?language=2&page={page}&format=json";
 
-            return resp != null
-                ? resp.Results                 // List<ExerciseDto>
-                : Array.Empty<ExerciseDto>();  // ExerciseDto[]
+            var resp = await _client.GetFromJsonAsync<WgerResponse<ExerciseDto>>(url);
+            // filter out any stray blanks just in case
+            return resp?.Results
+                       .Where(e => !string.IsNullOrWhiteSpace(e.Name))
+                   ?? new List<ExerciseDto>();
         }
 
     }
