@@ -63,7 +63,8 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 
-app.MapRazorPages();      // Identity UI (Login/Register) lives here
+app.MapRazorPages();
+app.MapControllers();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
