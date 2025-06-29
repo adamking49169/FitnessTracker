@@ -94,8 +94,12 @@ namespace FitnessTracker.Controllers
             var existingExercise = await _context.Exercises.FindAsync(exercise.Id);
             if (existingExercise == null)
             {
+                using var tx = await _context.Database.BeginTransactionAsync();
+                await _context.Database.ExecuteSqlRawAsync("SET IDENTITY_INSERT Exercises ON");
                 _context.Exercises.Add(exercise);
                 await _context.SaveChangesAsync();
+                await _context.Database.ExecuteSqlRawAsync("SET IDENTITY_INSERT Exercises OFF");
+                await tx.CommitAsync();
             }
 
             // fetch calories burned
@@ -161,8 +165,12 @@ namespace FitnessTracker.Controllers
             var existingExercise = await _context.Exercises.FindAsync(exercise.Id);
             if (existingExercise == null)
             {
+                using var tx = await _context.Database.BeginTransactionAsync();
+                await _context.Database.ExecuteSqlRawAsync("SET IDENTITY_INSERT Exercises ON");
                 _context.Exercises.Add(exercise);
                 await _context.SaveChangesAsync();
+                await _context.Database.ExecuteSqlRawAsync("SET IDENTITY_INSERT Exercises OFF");
+                await tx.CommitAsync();
             }
 
             workout.CaloriesBurned = await _calories

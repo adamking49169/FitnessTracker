@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FitnessTracker.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250629161300_addingnewModel")]
-    partial class addingnewModel
+    [Migration("20250629164400_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -30,7 +30,6 @@ namespace FitnessTracker.Data.Migrations
                     b.Property<int>("Id")
                         .HasColumnType("int")
                         .HasAnnotation("Relational:JsonPropertyName", "id");
-
 
                     b.Property<string>("Name")
                         .IsRequired()
