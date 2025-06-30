@@ -28,8 +28,7 @@ builder.Services
     .AddDefaultTokenProviders();
 
 
-builder.Services.AddHttpClient<IWgerService, WgerService>(c =>
-    c.BaseAddress = new Uri("https://wger.de"));
+builder.Services.AddSingleton<IWgerService, WgerService>();
 
 builder.Services.AddHttpClient<ICalorieService, ApiNinjasCalorieService>(c => {
     c.BaseAddress = new Uri("https://api.api-ninjas.com/");
