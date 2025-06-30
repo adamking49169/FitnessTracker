@@ -14,11 +14,15 @@
     @Html.HiddenFor(m => m.Date)
 
     <div class="form-group">
-        <label asp-for="ExerciseId">Exercise</label>
-        <select asp-for="ExerciseId" class="form-control" asp-items="ViewBag.Exercises">
-            <option value="">-- Select --</option>
-        </select>
-        <span asp-validation-for="ExerciseId" class="text-danger"></span>
+        <label for="exerciseName">Exercise</label>
+        <input type="text" id="exerciseName" name="exerciseName" class="form-control" list="exerciseOptions" value="@ViewBag.SelectedName" />
+        <datalist id="exerciseOptions">
+            @foreach (var name in (IEnumerable<string>)ViewBag.ExerciseNames)
+            {
+                <option value="@name"></option>
+            }
+        </datalist>
+        <span asp-validation-for="ExerciseName" class="text-danger"></span>
     </div>
 
     <div class="form-group">

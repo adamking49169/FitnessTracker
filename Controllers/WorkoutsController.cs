@@ -55,18 +55,19 @@ namespace FitnessTracker.Controllers
         {
             var model = new Workout
             {
-                Date = DateTime.Today,
+                Date = DateTime.Now,
                 UserWeightKg = 0
             };
 
             var exercises = await _wger.GetExercisesAsync();
-            ViewBag.Exercises = new SelectList(exercises, "Id", "Name");
+            ViewBag.ExerciseNames = exercises.Select(e => e.Name).ToList();
+            ViewBag.SelectedName = string.Empty;
             return View(model);
         }
 
         // POST: Workouts/Create
         [HttpPost, ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Date,DurationMinutes,UserWeightKg,ExerciseId")] Workout workout)
+        public async Task<IActionResult> Create([Bind("Date,DurationMinutes,UserWeightKg,ExerciseName")] Workout workout)
         {
             // Assign the logged-in user
             workout.UserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -81,15 +82,17 @@ namespace FitnessTracker.Controllers
             }
 
             // Lookup and validate exercise
-            var exercise = (await _wger.GetExercisesAsync()).FirstOrDefault(e => e.Id == workout.ExerciseId);
+            var exercise = (await _wger.GetExercisesAsync()).FirstOrDefault(e =>
+               string.Equals(e.Name, workout.ExerciseName, StringComparison.OrdinalIgnoreCase));
             if (exercise == null)
             {
-                ModelState.AddModelError(nameof(workout.ExerciseId), "Invalid exercise selected");
+                ModelState.AddModelError("ExerciseName", "Invalid exercise selected");
                 var exercises2 = await _wger.GetExercisesAsync();
-                ViewBag.Exercises = new SelectList(exercises2, "Id", "Name", workout.ExerciseId);
+                ViewBag.ExerciseNames = exercises2.Select(e => e.Name).ToList();
+                ViewBag.SelectedName = workout.ExerciseName;
                 return View(workout);
             }
-
+            workout.ExerciseId = exercise.Id;
             // Ensure exercise exists in local DB
             if (await _context.Exercises.FindAsync(exercise.Id) == null)
             {
@@ -124,13 +127,14 @@ namespace FitnessTracker.Controllers
             if (workout == null) return NotFound();
 
             var exercises = await _wger.GetExercisesAsync();
-            ViewBag.Exercises = new SelectList(exercises, "Id", "Name", workout.ExerciseId);
+            ViewBag.ExerciseNames = exercises.Select(e => e.Name).ToList();
+            ViewBag.SelectedName = exercises.FirstOrDefault(e => e.Id == workout.ExerciseId)?.Name ?? string.Empty;
             return View(workout);
         }
 
         // POST: Workouts/Edit/5
         [HttpPost, ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Date,DurationMinutes,UserWeightKg,ExerciseId")] Workout workout)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Date,DurationMinutes,UserWeightKg,ExerciseName")] Workout workout)
         {
             if (id != workout.Id) return NotFound();
 
@@ -147,20 +151,23 @@ namespace FitnessTracker.Controllers
             if (!ModelState.IsValid)
             {
                 var exercises = await _wger.GetExercisesAsync();
-                ViewBag.Exercises = new SelectList(exercises, "Id", "Name", workout.ExerciseId);
+                ViewBag.ExerciseNames = exercises.Select(e => e.Name).ToList();
+                ViewBag.SelectedName = workout.ExerciseName;
                 return View(workout);
             }
 
             // Lookup and validate exercise
-            var exercise2 = (await _wger.GetExercisesAsync()).FirstOrDefault(e => e.Id == workout.ExerciseId);
+            var exercise2 = (await _wger.GetExercisesAsync()).FirstOrDefault(e =>
+                 string.Equals(e.Name, workout.ExerciseName, StringComparison.OrdinalIgnoreCase));
             if (exercise2 == null)
             {
-                ModelState.AddModelError(nameof(workout.ExerciseId), "Invalid exercise selected");
+                ModelState.AddModelError("ExerciseName", "Invalid exercise selected");
                 var exercises3 = await _wger.GetExercisesAsync();
-                ViewBag.Exercises = new SelectList(exercises3, "Id", "Name", workout.ExerciseId);
+                ViewBag.ExerciseNames = exercises3.Select(e => e.Name).ToList();
+                ViewBag.SelectedName = workout.ExerciseName;
                 return View(workout);
             }
-
+            workout.ExerciseId = exercise2.Id;
             // Ensure exercise exists locally
             if (await _context.Exercises.FindAsync(exercise2.Id) == null)
             {

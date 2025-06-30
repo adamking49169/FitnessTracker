@@ -30,7 +30,7 @@ else
             @foreach (var w in Model)
             {
                 <tr>
-                    <td>@w.Date:yyyy-MM-dd</td>
+                    <td>@w.Date.Date</td>
                     <td>@w.Exercise?.Name</td>
                     <td>@w.DurationMinutes</td>
                     <td>@w.CaloriesBurned</td>
