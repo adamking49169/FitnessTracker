@@ -34,7 +34,10 @@ builder.Services.AddHttpClient<ICalorieService, ApiNinjasCalorieService>(c => {
     c.BaseAddress = new Uri("https://api.api-ninjas.com/");
     c.DefaultRequestHeaders.Add("X-Api-Key", builder.Configuration["ApiNinjas:Key"]);
 });
-
+builder.Services.AddHttpClient<IOpenFoodFactsService, OpenFoodFactsService>(c =>
+{
+    c.BaseAddress = new Uri("https://world.openfoodfacts.org/");
+});
 
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
