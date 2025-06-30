@@ -38,7 +38,7 @@ public class ApiNinjasCalorieService : ICalorieService
 
             var json = await res.Content.ReadAsStringAsync();
             var list = JsonSerializer.Deserialize<List<CaloriesResult>>(json);
-            if (list == null || list.Count == 0)
+                                                                                                                                                                                                                                                                                                                                                                                                                                                if (list == null || list.Count == 0)
                 return 0;
 
             return list[0]?.total_calories ?? 0;

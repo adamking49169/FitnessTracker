@@ -59,8 +59,12 @@ namespace FitnessTracker.Controllers
                 UserWeightKg = 0
             };
 
-            var exercises = await _wger.GetExercisesAsync();
-            ViewBag.ExerciseNames = exercises.Select(e => e.Name).ToList();
+            var wgerExercises = await _wger.GetExercisesAsync();
+            var localNames = await _context.Exercises.Select(e => e.Name).ToListAsync();
+            ViewBag.ExerciseNames = wgerExercises.Select(e => e.Name)
+                                                 .Concat(localNames)
+                                                 .Distinct()
+                                                 .ToList();
             ViewBag.SelectedName = string.Empty;
             return View(model);
         }
@@ -76,21 +80,30 @@ namespace FitnessTracker.Controllers
 
             if (!ModelState.IsValid)
             {
-                var exercises = await _wger.GetExercisesAsync();
-                ViewBag.Exercises = new SelectList(exercises, "Id", "Name", workout.ExerciseId);
+                var wgerExercises = await _wger.GetExercisesAsync();
+                var localNames = await _context.Exercises.Select(e => e.Name).ToListAsync();
+                ViewBag.ExerciseNames = wgerExercises.Select(e => e.Name)
+                                                      .Concat(localNames)
+                                                      .Distinct()
+                                                      .ToList();
+                ViewBag.SelectedName = workout.ExerciseName;
                 return View(workout);
             }
 
-            // Lookup and validate exercise
+            // Lookup existing exercise by name; create if not found
             var exercise = (await _wger.GetExercisesAsync()).FirstOrDefault(e =>
                string.Equals(e.Name, workout.ExerciseName, StringComparison.OrdinalIgnoreCase));
             if (exercise == null)
             {
-                ModelState.AddModelError("ExerciseName", "Invalid exercise selected");
-                var exercises2 = await _wger.GetExercisesAsync();
-                ViewBag.ExerciseNames = exercises2.Select(e => e.Name).ToList();
-                ViewBag.SelectedName = workout.ExerciseName;
-                return View(workout);
+                var nextId = await _context.Exercises.AnyAsync()
+                    ? await _context.Exercises.MaxAsync(e => e.Id) + 1
+                    : 1;
+                exercise = new ExerciseDto
+                {
+                    Id = nextId,
+                    Name = workout.ExerciseName ?? string.Empty,
+                    NameOriginal = workout.ExerciseName ?? string.Empty
+                };
             }
             workout.ExerciseId = exercise.Id;
             // Ensure exercise exists in local DB
@@ -126,9 +139,15 @@ namespace FitnessTracker.Controllers
 
             if (workout == null) return NotFound();
 
-            var exercises = await _wger.GetExercisesAsync();
-            ViewBag.ExerciseNames = exercises.Select(e => e.Name).ToList();
-            ViewBag.SelectedName = exercises.FirstOrDefault(e => e.Id == workout.ExerciseId)?.Name ?? string.Empty;
+            var wgerExercises = await _wger.GetExercisesAsync();
+            var dbExercises = await _context.Exercises.ToListAsync();
+            ViewBag.ExerciseNames = wgerExercises.Select(e => e.Name)
+                                                .Concat(dbExercises.Select(e => e.Name))
+                                                .Distinct()
+                                                .ToList();
+            ViewBag.SelectedName = dbExercises.FirstOrDefault(e => e.Id == workout.ExerciseId)?.Name
+                                   ?? wgerExercises.FirstOrDefault(e => e.Id == workout.ExerciseId)?.Name
+                                   ?? string.Empty;
             return View(workout);
         }
 
@@ -150,22 +169,30 @@ namespace FitnessTracker.Controllers
 
             if (!ModelState.IsValid)
             {
-                var exercises = await _wger.GetExercisesAsync();
-                ViewBag.ExerciseNames = exercises.Select(e => e.Name).ToList();
+                var wgerExercises = await _wger.GetExercisesAsync();
+                var dbNames = await _context.Exercises.Select(e => e.Name).ToListAsync();
+                ViewBag.ExerciseNames = wgerExercises.Select(e => e.Name)
+                                                    .Concat(dbNames)
+                                                    .Distinct()
+                                                    .ToList();
                 ViewBag.SelectedName = workout.ExerciseName;
                 return View(workout);
             }
 
-            // Lookup and validate exercise
+            // Lookup existing exercise by name; create if not found
             var exercise2 = (await _wger.GetExercisesAsync()).FirstOrDefault(e =>
                  string.Equals(e.Name, workout.ExerciseName, StringComparison.OrdinalIgnoreCase));
             if (exercise2 == null)
             {
-                ModelState.AddModelError("ExerciseName", "Invalid exercise selected");
-                var exercises3 = await _wger.GetExercisesAsync();
-                ViewBag.ExerciseNames = exercises3.Select(e => e.Name).ToList();
-                ViewBag.SelectedName = workout.ExerciseName;
-                return View(workout);
+                var nextId = await _context.Exercises.AnyAsync()
+                    ? await _context.Exercises.MaxAsync(e => e.Id) + 1
+                    : 1;
+                exercise2 = new ExerciseDto
+                {
+                    Id = nextId,
+                    Name = workout.ExerciseName ?? string.Empty,
+                    NameOriginal = workout.ExerciseName ?? string.Empty
+                };
             }
             workout.ExerciseId = exercise2.Id;
             // Ensure exercise exists locally
