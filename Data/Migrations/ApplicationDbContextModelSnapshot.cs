@@ -40,7 +40,7 @@ namespace FitnessTracker.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Exercises");
+                    b.ToTable("Exercises", (string)null);
                 });
 
             modelBuilder.Entity("FitnessTracker.Models.MacroEntry", b =>
@@ -69,7 +69,7 @@ namespace FitnessTracker.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("MacroEntries");
+                    b.ToTable("MacroEntries", (string)null);
                 });
 
             modelBuilder.Entity("FitnessTracker.Models.Workout", b =>
@@ -103,7 +103,7 @@ namespace FitnessTracker.Data.Migrations
 
                     b.HasIndex("ExerciseId");
 
-                    b.ToTable("Workouts");
+                    b.ToTable("Workouts", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>

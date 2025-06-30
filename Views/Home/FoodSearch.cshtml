@@ -8,9 +8,16 @@
     <input type="text" id="query" class="form-control" placeholder="Enter food name" />
     <button class="btn btn-primary" type="button" id="searchBtn">Search</button>
 </div>
+
 <div class="input-group mb-3">
     <input type="text" id="barcode" class="form-control" placeholder="Enter barcode" />
     <button class="btn btn-secondary" type="button" id="barcodeBtn">Lookup Barcode</button>
+    <button class="btn btn-outline-primary" type="button" id="scanBtn">Scan</button>
+</div>
+
+<div id="scannerContainer" class="mb-3" style="display:none;">
+    <video id="scannerPreview" preload="none" style="width:100%; max-width:400px;"></video>
+    <button class="btn btn-danger btn-sm mt-2" type="button" id="closeScanner">Close</button>
 </div>
 
 <div class="input-group mb-3">
@@ -21,10 +28,80 @@
 <div class="mb-3">
     <button class="btn btn-info" type="button" id="exampleBtn">Example API</button>
 </div>
+
 <div id="result" class="mt-4"></div>
 
 @section Scripts {
+    <script src="~/lib/quagga/quagga.min.js"></script>
+
     <script>
+        const scannerContainer = document.getElementById('scannerContainer');
+        const preview = document.getElementById('scannerPreview');
+        const scanBtn = document.getElementById('scanBtn');
+        const closeScanner = document.getElementById('closeScanner');
+        const barcodeInput = document.getElementById('barcode');
+        let scannerActive = false;
+
+        function onDetected(result) {
+            const code = result.codeResult.code;
+            barcodeInput.value = code;
+            barcodeInput.focus();
+            stopScanner();
+        }
+
+        function startScanner() {
+            if (scannerActive) {
+                Quagga.stop();
+                scannerActive = false;
+            }
+
+            scannerContainer.style.display = 'block';
+
+            if (typeof Quagga === 'undefined') {
+                alert('Barcode scanner library failed to load.');
+                return;
+            }
+
+            Quagga.init({
+                inputStream: {
+                    name: "Live",
+                    type: "LiveStream",
+                    target: preview,
+                    constraints: {
+                        facingMode: "environment"
+                    }
+                },
+                decoder: {
+                    readers: ["ean_reader", "upc_reader", "upc_e_reader", "ean_8_reader", "code_128_reader"]
+                }
+            }, err => {
+                if (err) {
+                    console.error("Quagga init failed:", err);
+                    alert("Camera access issue or Quagga error.");
+                    scannerContainer.style.display = 'none';
+                    return;
+                }
+
+                Quagga.start();
+                scannerActive = true;
+                console.log("Scanner started");
+            });
+
+            Quagga.onDetected(onDetected);
+        }
+
+        function stopScanner() {
+            if (!scannerActive) return;
+            Quagga.stop();
+            Quagga.offDetected(onDetected);
+            scannerContainer.style.display = 'none';
+            scannerActive = false;
+            console.log("Scanner stopped");
+        }
+
+        scanBtn.addEventListener('click', startScanner);
+        closeScanner.addEventListener('click', stopScanner);
+
         document.getElementById('searchBtn').addEventListener('click', async () => {
             const q = document.getElementById('query').value.trim();
             if (!q) return;
@@ -37,7 +114,6 @@
                     return;
                 }
                 const data = await res.json();
-                console.log(data);
                 resEl.innerHTML = `<h5>${data.name}</h5>
                     <ul>
                         <li>Calories per 100g: ${data.caloriesPer100g ?? 'N/A'}</li>
@@ -45,11 +121,13 @@
                         <li>Carbs per 100g: ${data.carbsPer100g ?? 'N/A'}</li>
                         <li>Fat per 100g: ${data.fatPer100g ?? 'N/A'}</li>
                     </ul>`;
-            } catch (err) {
+            } catch {
                 resEl.textContent = 'Error contacting server.';
             }
-        });document.getElementById('barcodeBtn').addEventListener('click', async () => {
-            const code = document.getElementById('barcode').value.trim();
+        });
+
+        document.getElementById('barcodeBtn').addEventListener('click', async () => {
+            const code = barcodeInput.value.trim();
             if (!code) return;
             const resEl = document.getElementById('result');
             resEl.textContent = 'Looking up...';
@@ -60,15 +138,15 @@
                     return;
                 }
                 const data = await res.json();
-                resEl.innerHTML = `<h5>${data.name}</h5>` +
-                    `<p>Barcode: ${data.barcode}</p>` +
-                    `<ul>` +
-                    `<li>Calories per 100g: ${data.caloriesPer100g ?? 'N/A'}</li>` +
-                    `<li>Protein per 100g: ${data.proteinPer100g ?? 'N/A'}</li>` +
-                    `<li>Carbs per 100g: ${data.carbsPer100g ?? 'N/A'}</li>` +
-                    `<li>Fat per 100g: ${data.fatPer100g ?? 'N/A'}</li>` +
-                    `</ul>`;
-            } catch (err) {
+                resEl.innerHTML = `<h5>${data.name}</h5>
+                    <p>Barcode: ${data.barcode}</p>
+                    <ul>
+                        <li>Calories per 100g: ${data.caloriesPer100g ?? 'N/A'}</li>
+                        <li>Protein per 100g: ${data.proteinPer100g ?? 'N/A'}</li>
+                        <li>Carbs per 100g: ${data.carbsPer100g ?? 'N/A'}</li>
+                        <li>Fat per 100g: ${data.fatPer100g ?? 'N/A'}</li>
+                    </ul>`;
+            } catch {
                 resEl.textContent = 'Error contacting server.';
             }
         });
@@ -86,7 +164,7 @@
                 }
                 const data = await res.json();
                 resEl.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
-            } catch (err) {
+            } catch {
                 resEl.textContent = 'Error contacting server.';
             }
         });
@@ -102,7 +180,7 @@
                 }
                 const data = await res.json();
                 resEl.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
-            } catch (err) {
+            } catch {
                 resEl.textContent = 'Error contacting server.';
             }
         });
