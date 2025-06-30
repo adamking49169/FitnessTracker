@@ -8,7 +8,19 @@
     <input type="text" id="query" class="form-control" placeholder="Enter food name" />
     <button class="btn btn-primary" type="button" id="searchBtn">Search</button>
 </div>
+<div class="input-group mb-3">
+    <input type="text" id="barcode" class="form-control" placeholder="Enter barcode" />
+    <button class="btn btn-secondary" type="button" id="barcodeBtn">Lookup Barcode</button>
+</div>
 
+<div class="input-group mb-3">
+    <input type="text" id="nutrientQuery" class="form-control" placeholder="Enter food name for nutrients" />
+    <button class="btn btn-success" type="button" id="nutrientsBtn">Get Nutrients</button>
+</div>
+
+<div class="mb-3">
+    <button class="btn btn-info" type="button" id="exampleBtn">Example API</button>
+</div>
 <div id="result" class="mt-4"></div>
 
 @section Scripts {
@@ -33,6 +45,63 @@
                         <li>Carbs per 100g: ${data.carbsPer100g ?? 'N/A'}</li>
                         <li>Fat per 100g: ${data.fatPer100g ?? 'N/A'}</li>
                     </ul>`;
+            } catch (err) {
+                resEl.textContent = 'Error contacting server.';
+            }
+        });document.getElementById('barcodeBtn').addEventListener('click', async () => {
+            const code = document.getElementById('barcode').value.trim();
+            if (!code) return;
+            const resEl = document.getElementById('result');
+            resEl.textContent = 'Looking up...';
+            try {
+                const res = await fetch(`/api/OpenFood/barcode/${encodeURIComponent(code)}`);
+                if (!res.ok) {
+                    resEl.textContent = 'Product not found.';
+                    return;
+                }
+                const data = await res.json();
+                resEl.innerHTML = `<h5>${data.name}</h5>` +
+                    `<p>Barcode: ${data.barcode}</p>` +
+                    `<ul>` +
+                    `<li>Calories per 100g: ${data.caloriesPer100g ?? 'N/A'}</li>` +
+                    `<li>Protein per 100g: ${data.proteinPer100g ?? 'N/A'}</li>` +
+                    `<li>Carbs per 100g: ${data.carbsPer100g ?? 'N/A'}</li>` +
+                    `<li>Fat per 100g: ${data.fatPer100g ?? 'N/A'}</li>` +
+                    `</ul>`;
+            } catch (err) {
+                resEl.textContent = 'Error contacting server.';
+            }
+        });
+
+        document.getElementById('nutrientsBtn').addEventListener('click', async () => {
+            const q = document.getElementById('nutrientQuery').value.trim();
+            if (!q) return;
+            const resEl = document.getElementById('result');
+            resEl.textContent = 'Fetching nutrients...';
+            try {
+                const res = await fetch(`/api/OpenFood/nutrients/${encodeURIComponent(q)}`);
+                if (!res.ok) {
+                    resEl.textContent = 'Food not found.';
+                    return;
+                }
+                const data = await res.json();
+                resEl.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+            } catch (err) {
+                resEl.textContent = 'Error contacting server.';
+            }
+        });
+
+        document.getElementById('exampleBtn').addEventListener('click', async () => {
+            const resEl = document.getElementById('result');
+            resEl.textContent = 'Fetching example...';
+            try {
+                const res = await fetch('/api/OpenFood/example');
+                if (!res.ok) {
+                    resEl.textContent = 'Request failed.';
+                    return;
+                }
+                const data = await res.json();
+                resEl.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
             } catch (err) {
                 resEl.textContent = 'Error contacting server.';
             }
