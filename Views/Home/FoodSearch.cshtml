@@ -25,6 +25,7 @@
                     return;
                 }
                 const data = await res.json();
+                console.log(data);
                 resEl.innerHTML = `<h5>${data.name}</h5>
                     <ul>
                         <li>Calories per 100g: ${data.caloriesPer100g ?? 'N/A'}</li>
