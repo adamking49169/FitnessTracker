@@ -74,7 +74,7 @@ namespace FitnessTracker.Controllers
 
         // ⚗️ Return full nutrient object for advanced users
         [HttpGet("nutrients/{query}")]
-        public async Task<IActionResult> GetRawNutrientData(string query)
+        public async Task<IActionResult> GetNutrientValues(string query)
         {
             if (string.IsNullOrWhiteSpace(query))
                 return BadRequest("Query is required.");
@@ -82,8 +82,14 @@ namespace FitnessTracker.Controllers
             var product = await _off.SearchProductAsync(query);
             if (product == null || product.Nutriments == null)
                 return NotFound("Food not found.");
-
-            return Ok(product.Nutriments);
+            return Ok(new
+            {
+                name = product.Name,
+                caloriesPer100g = product.Nutriments.EnergyKcal100g,
+                proteinPer100g = product.Nutriments.Proteins100g,
+                carbsPer100g = product.Nutriments.Carbs100g,
+                fatPer100g = product.Nutriments.Fat100g
+            });
         }
     }
 }
