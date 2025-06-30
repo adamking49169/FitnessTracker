@@ -1,0 +1,40 @@
+﻿@{
+    ViewData["Title"] = "Food Search";
+}
+
+<h1>@ViewData["Title"]</h1>
+
+<div class="input-group mb-3">
+    <input type="text" id="query" class="form-control" placeholder="Enter food name" />
+    <button class="btn btn-primary" type="button" id="searchBtn">Search</button>
+</div>
+
+<div id="result" class="mt-4"></div>
+
+@section Scripts {
+    <script>
+        document.getElementById('searchBtn').addEventListener('click', async () => {
+            const q = document.getElementById('query').value.trim();
+            if (!q) return;
+            const resEl = document.getElementById('result');
+            resEl.textContent = 'Searching...';
+            try {
+                const res = await fetch(`/api/OpenFood/search?query=${encodeURIComponent(q)}`);
+                if (!res.ok) {
+                    resEl.textContent = 'Food not found.';
+                    return;
+                }
+                const data = await res.json();
+                resEl.innerHTML = `<h5>${data.name}</h5>
+                    <ul>
+                        <li>Calories per 100g: ${data.caloriesPer100g ?? 'N/A'}</li>
+                        <li>Protein per 100g: ${data.proteinPer100g ?? 'N/A'}</li>
+                        <li>Carbs per 100g: ${data.carbsPer100g ?? 'N/A'}</li>
+                        <li>Fat per 100g: ${data.fatPer100g ?? 'N/A'}</li>
+                    </ul>`;
+            } catch (err) {
+                resEl.textContent = 'Error contacting server.';
+            }
+        });
+    </script>
+}

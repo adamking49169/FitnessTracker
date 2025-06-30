@@ -18,6 +18,11 @@ namespace FitnessTracker.Controllers
             return View();
         }
 
+        public IActionResult FoodSearch()
+        {
+            return View();
+        }
+
         public IActionResult Privacy()
         {
             return View();
