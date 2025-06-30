@@ -35,5 +35,28 @@ namespace FitnessTracker.Services
                 return null;
             }
         }
+        public async Task<OffProduct?> GetProductByBarcodeAsync(string barcode)
+        {
+            var url = $"api/v0/product/{Uri.EscapeDataString(barcode)}.json";
+            try
+            {
+                using var res = await _client.GetAsync(url);
+                if (!res.IsSuccessStatusCode)
+                    return null;
+
+                var json = await res.Content.ReadAsStringAsync();
+                var doc = JsonDocument.Parse(json);
+                if (doc.RootElement.TryGetProperty("product", out var prodEl))
+                {
+                    return prodEl.Deserialize<OffProduct>();
+                }
+                return null;
+            }
+            catch (Exception ex) when (ex is HttpRequestException || ex is TaskCanceledException || ex is JsonException)
+            {
+                Console.Error.WriteLine($"OFF error: {ex.Message}");
+                return null;
+            }
+        }
     }
 }

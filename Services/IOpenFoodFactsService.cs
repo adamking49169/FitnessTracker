@@ -10,6 +10,6 @@ namespace FitnessTracker.Services
         /// Searches for a product by query and returns the first result's nutriments.
         /// </summary>
         Task<OffProduct?> SearchProductAsync(string query);
-        Task<ProductResult?> GetProductByBarcodeAsync(string barcode);
+        Task<OffProduct?> GetProductByBarcodeAsync(string barcode);
     }
 }
