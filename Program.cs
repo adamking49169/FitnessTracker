@@ -9,7 +9,6 @@ using Microsoft.Extensions.Hosting;
 
 var builder = WebApplication.CreateBuilder(args);
 
-
 var connStr = builder.Configuration
     .GetConnectionString("DefaultConnection")
     ?? throw new InvalidOperationException("No DefaultConnection");
@@ -20,17 +19,18 @@ builder.Services.AddDbContext<ApplicationDbContext>(opts =>
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 builder.Services
-    .AddDefaultIdentity<IdentityUser>(opts => {
+    .AddDefaultIdentity<IdentityUser>(opts =>
+    {
         opts.SignIn.RequireConfirmedAccount = true;
     })
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultUI()
     .AddDefaultTokenProviders();
 
-
 builder.Services.AddSingleton<IWgerService, WgerService>();
 
-builder.Services.AddHttpClient<ICalorieService, ApiNinjasCalorieService>(c => {
+builder.Services.AddHttpClient<ICalorieService, ApiNinjasCalorieService>(c =>
+{
     c.BaseAddress = new Uri("https://api.api-ninjas.com/");
     c.DefaultRequestHeaders.Add("X-Api-Key", builder.Configuration["ApiNinjas:Key"]);
 });
@@ -41,14 +41,27 @@ builder.Services.AddHttpClient<IOpenFoodFactsService, OpenFoodFactsService>(c =>
 
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
-
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new()
+    {
+        Title = "Fitness Tracker API",
+        Version = "v1"
+    });
+});
 
 var app = builder.Build();
-
 
 if (app.Environment.IsDevelopment())
 {
     app.UseMigrationsEndPoint();
+    app.UseSwagger();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Fitness Tracker API");
+        c.RoutePrefix = string.Empty;
+    });
 }
 else
 {
@@ -63,7 +76,6 @@ app.UseRouting();
 
 app.UseAuthentication();
 app.UseAuthorization();
-
 
 app.MapRazorPages();
 app.MapControllers();

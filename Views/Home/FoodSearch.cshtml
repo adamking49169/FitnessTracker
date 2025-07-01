@@ -43,13 +43,25 @@
         const closeScanner = document.getElementById('closeScanner');
         const barcodeInput = document.getElementById('barcode');
         let scannerActive = false;
+        let lastDetectedCode = null;
+        let holdTimeout = null;
 
         function onDetected(result) {
             const code = result.codeResult.code;
-            barcodeInput.value = code;
-            barcodeInput.focus();
-            stopScanner();
-        }
+            if (code !== lastDetectedCode) {
+                lastDetectedCode = code;
+                if (holdTimeout) {
+                    clearTimeout(holdTimeout);
+                }
+                holdTimeout = setTimeout(() => {
+                    barcodeInput.value = code;
+                    barcodeInput.focus();
+                    stopScanner();
+                    lastDetectedCode = null;
+                    holdTimeout = null;
+                }, 2000); // require barcode to stay stable for 2 seconds
+            }
+        }  // ← Closing brace for onDetected
 
         function startScanner() {
             if (scannerActive) {
