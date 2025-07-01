@@ -20,3 +20,38 @@ html {
 body {
   margin-bottom: 60px;
 }
+#scannerContainer {
+    position: relative;
+}
+
+.scanner-preview {
+    width: 100%;
+    max-width: 300px;
+    max-height: 300px;
+    margin: 0 auto;
+    position: relative;
+    overflow: hidden;
+}
+
+.scanner-overlay::before,
+.scanner-overlay::after {
+    content: '';
+    position: absolute;
+    background: rgba(255, 255, 255, 0.7);
+}
+
+.scanner-overlay::before {
+    left: 50%;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    transform: translateX(-50%);
+}
+
+.scanner-overlay::after {
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 2px;
+    transform: translateY(-50%);
+}
