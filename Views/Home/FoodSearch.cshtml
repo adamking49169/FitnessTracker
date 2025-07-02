@@ -1,5 +1,5 @@
-﻿@{
-    ViewData["Title"] = "Food Search";
+﻿﻿@{
+ViewData["Title"] = "Food Search";
 }
 
 <h1>@ViewData["Title"]</h1>
@@ -44,24 +44,26 @@
         const barcodeInput = document.getElementById('barcode');
         let scannerActive = false;
         let lastDetectedCode = null;
-        let holdTimeout = null;
+        let stableCount = 0;
+        const REQUIRED_STABLE_COUNT = 3;
 
         function onDetected(result) {
             const code = result.codeResult.code;
-            if (code !== lastDetectedCode) {
+            if (code === lastDetectedCode) {
+                stableCount++;
+            } else {
                 lastDetectedCode = code;
-                if (holdTimeout) {
-                    clearTimeout(holdTimeout);
-                }
-                holdTimeout = setTimeout(() => {
-                    barcodeInput.value = code;
-                    barcodeInput.focus();
-                    stopScanner();
-                    lastDetectedCode = null;
-                    holdTimeout = null;
-                }, 2000); // require barcode to stay stable for 2 seconds
+                stableCount = 1;
             }
-        }  // ← Closing brace for onDetected
+
+            if (stableCount >= REQUIRED_STABLE_COUNT) {
+                barcodeInput.value = code;
+                barcodeInput.focus();
+                stopScanner();
+                lastDetectedCode = null;
+                stableCount = 0;
+            }
+        }
 
         function startScanner() {
             if (scannerActive) {
