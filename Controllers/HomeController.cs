@@ -17,7 +17,10 @@ namespace FitnessTracker.Controllers
         {
             return View();
         }
-
+        public IActionResult TescoSearch()
+        {
+            return View();
+        }
         public IActionResult FoodSearch()
         {
             return View();

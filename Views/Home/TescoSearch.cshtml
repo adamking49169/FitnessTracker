@@ -1,0 +1,59 @@
+﻿@{
+    ViewData["Title"] = "Tesco Search";
+}
+
+<h1>@ViewData["Title"]</h1>
+
+<div class="input-group mb-3">
+    <input type="text" id="query" class="form-control" placeholder="Enter product name" />
+    <button class="btn btn-primary" type="button" id="searchBtn">Get Nutrition</button>
+    <button class="btn btn-secondary" type="button" id="listBtn">List Products</button>
+</div>
+
+<div id="result" class="mt-4"></div>
+
+@section Scripts {
+    <script>
+        document.getElementById('searchBtn').addEventListener('click', async () => {
+            const q = document.getElementById('query').value.trim();
+            if (!q) return;
+            const resEl = document.getElementById('result');
+            resEl.textContent = 'Searching...';
+            try {
+                const res = await fetch(`/api/Tesco/search?query=${encodeURIComponent(q)}`);
+                if (!res.ok) {
+                    resEl.textContent = 'Product not found.';
+                    return;
+                }
+                const data = await res.json();
+                resEl.innerHTML = `<h5>${data.name}</h5>` +
+                    `<ul>` +
+                    `<li>Calories per 100g: ${data.energyKcal100g ?? 'N/A'}</li>` +
+                    `<li>Carbs per 100g: ${data.carbs100g ?? 'N/A'}</li>` +
+                    `<li>Fat per 100g: ${data.fat100g ?? 'N/A'}</li>` +
+                    `<li>Protein per 100g: ${data.protein100g ?? 'N/A'}</li>` +
+                    `</ul>`;
+            } catch {
+                resEl.textContent = 'Error contacting server.';
+            }
+        });
+
+        document.getElementById('listBtn').addEventListener('click', async () => {
+            const q = document.getElementById('query').value.trim();
+            if (!q) return;
+            const resEl = document.getElementById('result');
+            resEl.textContent = 'Searching...';
+            try {
+                const res = await fetch(`/api/Tesco/list?query=${encodeURIComponent(q)}`);
+                if (!res.ok) {
+                    resEl.textContent = 'Request failed.';
+                    return;
+                }
+                const data = await res.json();
+                resEl.innerHTML = `<ul>${data.map(n => `<li>${n}</li>`).join('')}</ul>`;
+            } catch {
+                resEl.textContent = 'Error contacting server.';
+            }
+        });
+    </script>
+}
