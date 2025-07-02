@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using Microsoft.Extensions.Caching.Memory;
 using System.Threading.Tasks;
 using System.Xml;
 
@@ -12,9 +13,11 @@ namespace FitnessTracker.Services
     public class TescoScraperService : ITescoScraperService
     {
         private readonly HttpClient _client;
-        public TescoScraperService(HttpClient client)
+        private readonly IMemoryCache _cache;
+        public TescoScraperService(HttpClient client, IMemoryCache cache)
         {
             _client = client;
+            _cache = cache;
             if (!_client.DefaultRequestHeaders.Contains("User-Agent"))
             {
                 _client.DefaultRequestHeaders.Add("User-Agent",
@@ -26,6 +29,10 @@ namespace FitnessTracker.Services
 
         public async Task<IReadOnlyList<string>> SearchProductNamesAsync(string query)
         {
+            var cacheKey = $"tesco_list_{query.ToLowerInvariant()}";
+            if (_cache.TryGetValue(cacheKey, out IReadOnlyList<string> cached))
+                return cached;
+
             var url = $"https://www.tesco.com/groceries/en-GB/search?query={Uri.EscapeDataString(query)}";
             try
             {
@@ -35,10 +42,12 @@ namespace FitnessTracker.Services
                 var nodes = doc.DocumentNode.SelectNodes("//a[contains(@class,'tile-product__image-link')]");
                 if (nodes == null)
                     return Array.Empty<string>();
-                return nodes.Select(n => n.GetAttributeValue("aria-label", null) ?? n.InnerText.Trim())
-                            .Where(n => !string.IsNullOrWhiteSpace(n))
-                            .Distinct()
-                            .ToList();
+                var list = nodes.Select(n => n.GetAttributeValue("aria-label", null) ?? n.InnerText.Trim())
+                                .Where(n => !string.IsNullOrWhiteSpace(n))
+                                .Distinct()
+                                .ToList();
+                _cache.Set(cacheKey, list, TimeSpan.FromMinutes(30));
+                return list;
             }
             catch (Exception ex) when (ex is HttpRequestException || ex is TaskCanceledException)
             {
@@ -49,6 +58,10 @@ namespace FitnessTracker.Services
 
         public async Task<TescoProduct?> SearchProductAsync(string query)
         {
+            var cacheKey = $"tesco_prod_{query.ToLowerInvariant()}";
+            if (_cache.TryGetValue(cacheKey, out TescoProduct cachedProduct))
+                return cachedProduct;
+
             var url = $"https://www.tesco.com/groceries/en-GB/search?query={Uri.EscapeDataString(query)}";
             try
             {
@@ -95,7 +108,7 @@ namespace FitnessTracker.Services
                         protein = val;
                 }
 
-                return new TescoProduct
+                var product = new TescoProduct
                 {
                     Name = name,
                     EnergyKcal100g = energy,
@@ -103,6 +116,8 @@ namespace FitnessTracker.Services
                     Fat100g = fat,
                     Protein100g = protein
                 };
+                _cache.Set(cacheKey, product, TimeSpan.FromMinutes(30));
+                return product;
             }
             catch (Exception ex) when (ex is HttpRequestException || ex is TaskCanceledException)
             {

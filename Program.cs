@@ -39,7 +39,7 @@ builder.Services.AddHttpClient<IOpenFoodFactsService, OpenFoodFactsService>(c =>
     c.BaseAddress = new Uri("https://world.openfoodfacts.org/");
 });
 builder.Services.AddHttpClient<ITescoScraperService, TescoScraperService>();
-
+builder.Services.AddMemoryCache();
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
 builder.Services.AddEndpointsApiExplorer();
