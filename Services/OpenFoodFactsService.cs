@@ -18,7 +18,7 @@ namespace FitnessTracker.Services
 
         public async Task<OffProduct?> SearchProductAsync(string query)
         {
-            var url = $"cgi/search.pl?search_terms={Uri.EscapeDataString(query)}&search_simple=1&action=process&page_size=1&json=1&lc=en";
+            var url = $"cgi/search.pl?search_terms={Uri.EscapeDataString(query)}&search_simple=1&action=process&page_size=100&json=1&lc=en";
             try
             {
                 using var res = await _client.GetAsync(url);
