@@ -10,11 +10,16 @@ namespace FitnessTracker.Models
     [JsonNumberHandling(JsonNumberHandling.AllowReadingFromString)]
     public class OffProduct
     {
+        [JsonPropertyName("product_name_en")]
+        public string? NameEn { get; set; }
+
         [JsonPropertyName("product_name")]
-        public string? Name { get; set; }
+        public string? NameLocal { get; set; }
 
         [JsonPropertyName("nutriments")]
         public OffNutriments? Nutriments { get; set; }
+        [JsonIgnore]
+        public string? Name => !string.IsNullOrWhiteSpace(NameEn) ? NameEn : NameLocal;
     }
 
     public class OffNutriments
