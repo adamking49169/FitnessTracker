@@ -27,7 +27,9 @@ namespace FitnessTracker.Services
 
                 var json = await res.Content.ReadAsStringAsync();
                 var data = JsonSerializer.Deserialize<OffSearchResponse>(json);
-                return data?.Products?.FirstOrDefault();
+                return data?.Products?
+                 .FirstOrDefault(p => !string.IsNullOrWhiteSpace(p.NameEn))
+                 ?? data?.Products?.FirstOrDefault();
             }
             catch (Exception ex) when (ex is HttpRequestException || ex is TaskCanceledException || ex is JsonException)
             {
