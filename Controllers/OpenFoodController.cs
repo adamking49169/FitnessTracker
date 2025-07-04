@@ -54,8 +54,8 @@ namespace FitnessTracker.Controllers
         [HttpGet("barcode/{code}")]
         public async Task<IActionResult> GetByBarcode(string code)
         {
-            if (string.IsNullOrWhiteSpace(code))
-                return BadRequest("Barcode is required.");
+            if (string.IsNullOrWhiteSpace(code) || code.Length != 13)
+                return BadRequest("A 13-digit barcode is required.");
 
             var product = await _off.GetProductByBarcodeAsync(code);
             if (product == null || product.Nutriments == null)

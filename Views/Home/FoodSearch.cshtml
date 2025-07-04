@@ -49,6 +49,9 @@ ViewData["Title"] = "Food Search";
 
         function onDetected(result) {
             const code = result.codeResult.code;
+             if (code.length !== 13) {
+                return; // ignore non-13 digit barcodes
+            }
             if (code === lastDetectedCode) {
                 stableCount++;
             } else {
@@ -88,7 +91,7 @@ ViewData["Title"] = "Food Search";
                     }
                 },
                 decoder: {
-                    readers: ["ean_reader", "upc_reader", "upc_e_reader", "ean_8_reader", "code_128_reader", "code_39_reader", "codabar_reader"]
+                    readers: ["ean_reader"] // only detect 13-digit EAN barcodes
                 }
             }, err => {
                 if (err) {
@@ -144,7 +147,10 @@ ViewData["Title"] = "Food Search";
 
         document.getElementById('barcodeBtn').addEventListener('click', async () => {
             const code = barcodeInput.value.trim();
-            if (!code) return;
+            if (!code || code.length !== 13) {
+                alert('Please enter a valid 13-digit barcode.');
+                return;
+            }
             const resEl = document.getElementById('result');
             resEl.textContent = 'Looking up...';
             try {
