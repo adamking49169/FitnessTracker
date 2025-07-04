@@ -1,5 +1,5 @@
-﻿﻿@{
-ViewData["Title"] = "Food Search";
+﻿@{
+    ViewData["Title"] = "Food Search";
 }
 
 <h1>@ViewData["Title"]</h1>
@@ -30,7 +30,7 @@ ViewData["Title"] = "Food Search";
     <button class="btn btn-success" type="button" id="nutrientsBtn">Get Nutrients</button>
 </div>
 
-<div class="mb-3">
+<div class="mb-3" hidden>
     <button class="btn btn-info" type="button" id="exampleBtn">Example API</button>
 </div>
 
@@ -144,7 +144,25 @@ ViewData["Title"] = "Food Search";
                         <li>Protein: ${data.protein ?? 'N/A'}</li>
                         <li>Carbs: ${data.carbs ?? 'N/A'}</li>
                         <li>Fat: ${data.fat ?? 'N/A'}</li>
-                    </ul>`;
+                    </ul>
+                    <button id="addBtn" class="btn btn-primary mt-2">Add to Macros</button>`;
+                document.getElementById('addBtn').addEventListener('click', async () => {
+                    const payload = {
+                        carbsGrams: Math.round(data.carbs ?? 0),
+                        proteinGrams: Math.round(data.protein ?? 0),
+                        fatGrams: Math.round(data.fat ?? 0)
+                    };
+                    const addRes = await fetch('/api/macroentries', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    if(addRes.ok){
+                        resEl.insertAdjacentHTML('beforeend', '<div class="alert alert-success mt-2">Entry added!</div>');
+                    } else {
+                        resEl.insertAdjacentHTML('beforeend', '<div class="alert alert-danger mt-2">Failed to add.</div>');
+                    }
+                });
             } catch {
                 resEl.textContent = 'Error contacting server.';
             }
@@ -152,6 +170,7 @@ ViewData["Title"] = "Food Search";
 
         document.getElementById('barcodeBtn').addEventListener('click', async () => {
             const code = barcodeInput.value.trim();
+            const g = document.getElementById('barcodeGrams').value.trim();
             if (!code || code.length !== 13) {
                 alert('Please enter a valid 13-digit barcode.');
                 return;
@@ -173,7 +192,25 @@ ViewData["Title"] = "Food Search";
                         <li>Protein: ${data.protein ?? 'N/A'}</li>
                         <li>Carbs: ${data.carbs ?? 'N/A'}</li>
                         <li>Fat: ${data.fat ?? 'N/A'}</li>
-                    </ul>`;
+                    </ul>
+                    <button id="addBtn" class="btn btn-primary mt-2">Add to Macros</button>`;
+                document.getElementById('addBtn').addEventListener('click', async () => {
+                    const payload = {
+                        carbsGrams: Math.round(data.carbs ?? 0),
+                        proteinGrams: Math.round(data.protein ?? 0),
+                        fatGrams: Math.round(data.fat ?? 0)
+                    };
+                    const addRes = await fetch('/api/macroentries', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    if(addRes.ok){
+                        resEl.insertAdjacentHTML('beforeend', '<div class="alert alert-success mt-2">Entry added!</div>');
+                    } else {
+                        resEl.insertAdjacentHTML('beforeend', '<div class="alert alert-danger mt-2">Failed to add.</div>');
+                    }
+                });
             } catch {
                 resEl.textContent = 'Error contacting server.';
             }
