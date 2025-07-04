@@ -17,7 +17,7 @@ namespace FitnessTracker.Controllers
 
         // 🔍 Search by food name
         [HttpGet("search")]
-        public async Task<IActionResult> Search(string query)
+        public async Task<IActionResult> Search(string query, double? grams)
         {
             if (string.IsNullOrWhiteSpace(query))
                 return BadRequest("Query is required.");
@@ -26,33 +26,39 @@ namespace FitnessTracker.Controllers
             if (product == null || product.Nutriments == null)
                 return NotFound("Food not found.");
 
+
+            double factor = grams.HasValue && grams > 0 ? grams.Value / 100.0 : 1;
+
             return Ok(new
             {
                 name = product.Name,
-                caloriesPer100g = product.Nutriments.EnergyKcal100g,
-                proteinPer100g = product.Nutriments.Proteins100g,
-                carbsPer100g = product.Nutriments.Carbs100g,
-                fatPer100g = product.Nutriments.Fat100g
+                grams = grams ?? 100,
+                calories = product.Nutriments.EnergyKcal100g * factor,
+                protein = product.Nutriments.Proteins100g * factor,
+                carbs = product.Nutriments.Carbs100g * factor,
+                fat = product.Nutriments.Fat100g * factor
             });
         }
 
         // 🧾 Sample/test response
         [HttpGet("example")]
-        public IActionResult Example()
+        public IActionResult Example(double? grams)
         {
+            double factor = grams.HasValue && grams > 0 ? grams.Value / 100.0 : 1;
             return Ok(new
             {
                 name = "Banana",
-                caloriesPer100g = 89,
-                proteinPer100g = 1.1,
-                carbsPer100g = 22.8,
-                fatPer100g = 0.3
+                grams = grams ?? 100,
+                calories = 89 * factor,
+                protein = 1.1 * factor,
+                carbs = 22.8 * factor,
+                fat = 0.3 * factor
             });
         }
 
         // 📦 Search by barcode/UPC
         [HttpGet("barcode/{code}")]
-        public async Task<IActionResult> GetByBarcode(string code)
+        public async Task<IActionResult> GetByBarcode(string code, double? grams)
         {
             if (string.IsNullOrWhiteSpace(code) || code.Length != 13)
                 return BadRequest("A 13-digit barcode is required.");
@@ -60,21 +66,22 @@ namespace FitnessTracker.Controllers
             var product = await _off.GetProductByBarcodeAsync(code);
             if (product == null || product.Nutriments == null)
                 return NotFound("Product not found.");
-
+            double factor = grams.HasValue && grams > 0 ? grams.Value / 100.0 : 1;
             return Ok(new
             {
                 name = product.Name,
                 barcode = code,
-                caloriesPer100g = product.Nutriments.EnergyKcal100g,
-                proteinPer100g = product.Nutriments.Proteins100g,
-                carbsPer100g = product.Nutriments.Carbs100g,
-                fatPer100g = product.Nutriments.Fat100g
+                grams = grams ?? 100,
+                calories = product.Nutriments.EnergyKcal100g * factor,
+                protein = product.Nutriments.Proteins100g * factor,
+                carbs = product.Nutriments.Carbs100g * factor,
+                fat = product.Nutriments.Fat100g * factor
             });
         }
 
         // ⚗️ Return full nutrient object for advanced users
         [HttpGet("nutrients/{query}")]
-        public async Task<IActionResult> GetNutrientValues(string query)
+        public async Task<IActionResult> GetNutrientValues(string query, double? grams)
         {
             if (string.IsNullOrWhiteSpace(query))
                 return BadRequest("Query is required.");
@@ -82,13 +89,15 @@ namespace FitnessTracker.Controllers
             var product = await _off.SearchProductAsync(query);
             if (product == null || product.Nutriments == null)
                 return NotFound("Food not found.");
+            double factor = grams.HasValue && grams > 0 ? grams.Value / 100.0 : 1;
             return Ok(new
             {
                 name = product.Name,
-                caloriesPer100g = product.Nutriments.EnergyKcal100g,
-                proteinPer100g = product.Nutriments.Proteins100g,
-                carbsPer100g = product.Nutriments.Carbs100g,
-                fatPer100g = product.Nutriments.Fat100g
+                grams = grams ?? 100,
+                calories = product.Nutriments.EnergyKcal100g * factor,
+                protein = product.Nutriments.Proteins100g * factor,
+                carbs = product.Nutriments.Carbs100g * factor,
+                fat = product.Nutriments.Fat100g * factor
             });
         }
     }

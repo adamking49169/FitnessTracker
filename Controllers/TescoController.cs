@@ -15,14 +15,23 @@ namespace FitnessTracker.Controllers
         }
 
         [HttpGet("search")]
-        public async Task<IActionResult> Search(string query)
+        public async Task<IActionResult> Search(string query, double? grams)
         {
             if (string.IsNullOrWhiteSpace(query))
                 return BadRequest("Query is required.");
             var product = await _tesco.SearchProductAsync(query);
             if (product == null)
                 return NotFound("Product not found.");
-            return Ok(product);
+            double factor = grams.HasValue && grams > 0 ? grams.Value / 100.0 : 1;
+            return Ok(new
+            {
+                name = product.Name,
+                grams = grams ?? 100,
+                calories = product.EnergyKcal100g * factor,
+                carbs = product.Carbs100g * factor,
+                fat = product.Fat100g * factor,
+                protein = product.Protein100g * factor
+            });
         }
 
         [HttpGet("list")]
