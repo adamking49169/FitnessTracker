@@ -18,7 +18,7 @@ namespace FitnessTracker.Services
 
         public async Task<OffProduct?> SearchProductAsync(string query)
         {
-            var url = $"cgi/search.pl?search_terms={Uri.EscapeDataString(query)}&search_simple=1&action=process&page_size=100&json=1&lc=en";
+            var url = $"cgi/search.pl?search_terms={Uri.EscapeDataString(query)}&search_simple=1&action=process&page_size=20&json=1&lc=en";
             try
             {
                 using var res = await _client.GetAsync(url);
@@ -27,9 +27,15 @@ namespace FitnessTracker.Services
 
                 var json = await res.Content.ReadAsStringAsync();
                 var data = JsonSerializer.Deserialize<OffSearchResponse>(json);
-                return data?.Products?
-                 .FirstOrDefault(p => !string.IsNullOrWhiteSpace(p.NameEn))
-                 ?? data?.Products?.FirstOrDefault();
+                if (data?.Products == null || data.Products.Count == 0)
+                    return null;
+
+                var normalizedQuery = query.ToLowerInvariant();
+                var best = data.Products
+                    .Where(p => !string.IsNullOrWhiteSpace(p.Name))
+                    .OrderBy(p => LevenshteinDistance(normalizedQuery, p.Name!.ToLowerInvariant()))
+                    .FirstOrDefault();
+                return best ?? data.Products.FirstOrDefault();
             }
             catch (Exception ex) when (ex is HttpRequestException || ex is TaskCanceledException || ex is JsonException)
             {
@@ -59,6 +65,33 @@ namespace FitnessTracker.Services
                 Console.Error.WriteLine($"OFF error: {ex.Message}");
                 return null;
             }
+        }
+        private static int LevenshteinDistance(string s, string t)
+        {
+            if (string.IsNullOrEmpty(s))
+                return t?.Length ?? 0;
+            if (string.IsNullOrEmpty(t))
+                return s.Length;
+
+            var d = new int[s.Length + 1, t.Length + 1];
+
+            for (int i = 0; i <= s.Length; i++)
+                d[i, 0] = i;
+            for (int j = 0; j <= t.Length; j++)
+                d[0, j] = j;
+
+            for (int i = 1; i <= s.Length; i++)
+            {
+                for (int j = 1; j <= t.Length; j++)
+                {
+                    int cost = s[i - 1] == t[j - 1] ? 0 : 1;
+                    d[i, j] = Math.Min(
+                        Math.Min(d[i - 1, j] + 1, d[i, j - 1] + 1),
+                        d[i - 1, j - 1] + cost);
+                }
+            }
+
+            return d[s.Length, t.Length];
         }
     }
 }
