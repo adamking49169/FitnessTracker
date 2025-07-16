@@ -43,6 +43,42 @@ namespace FitnessTracker.Services
                 return null;
             }
         }
+
+        public async Task<IEnumerable<OffProduct>> SearchProductsAsync(string query, int limit = 5)
+        {
+            var url = $"cgi/search.pl?search_terms={Uri.EscapeDataString(query)}&search_simple=1&action=process&page_size=20&json=1&lc=en";
+            try
+            {
+                using var res = await _client.GetAsync(url);
+                if (!res.IsSuccessStatusCode)
+                    return Enumerable.Empty<OffProduct>();
+
+                var json = await res.Content.ReadAsStringAsync();
+                var data = JsonSerializer.Deserialize<OffSearchResponse>(json);
+                if (data?.Products == null || data.Products.Count == 0)
+                    return Enumerable.Empty<OffProduct>();
+
+                var normalizedQuery = query.ToLowerInvariant();
+                var results = data.Products
+                    .Where(p => !string.IsNullOrWhiteSpace(p.Name)
+                                && p.Nutriments != null
+                                && p.Nutriments.EnergyKcal100g.HasValue
+                                && p.Nutriments.Proteins100g.HasValue
+                                && p.Nutriments.Carbs100g.HasValue
+                                && p.Nutriments.Fat100g.HasValue)
+                    .OrderBy(p => LevenshteinDistance(normalizedQuery, p.Name!.ToLowerInvariant()))
+                    .Take(limit)
+                    .ToList();
+
+                return results;
+            }
+            catch (Exception ex) when (ex is HttpRequestException || ex is TaskCanceledException || ex is JsonException)
+            {
+                Console.Error.WriteLine($"OFF error: {ex.Message}");
+                return Enumerable.Empty<OffProduct>();
+            }
+        }
+
         public async Task<OffProduct?> GetProductByBarcodeAsync(string barcode)
         {
             var url = $"api/v0/product/{Uri.EscapeDataString(barcode)}.json";

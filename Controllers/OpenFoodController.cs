@@ -21,23 +21,23 @@ namespace FitnessTracker.Controllers
         {
             if (string.IsNullOrWhiteSpace(query))
                 return BadRequest("Query is required.");
-
-            var product = await _off.SearchProductAsync(query);
-            if (product == null || product.Nutriments == null)
+            var products = (await _off.SearchProductsAsync(query)).ToList();
+            if (products.Count == 0)
                 return NotFound("Food not found.");
 
 
             double factor = grams.HasValue && grams > 0 ? grams.Value / 100.0 : 1;
 
-            return Ok(new
+            var results = products.Select(p => new
             {
-                name = product.Name,
+                name = p.Name,
                 grams = grams ?? 100,
-                calories = product.Nutriments.EnergyKcal100g * factor,
-                protein = product.Nutriments.Proteins100g * factor,
-                carbs = product.Nutriments.Carbs100g * factor,
-                fat = product.Nutriments.Fat100g * factor
+                calories = p.Nutriments!.EnergyKcal100g * factor, 
+                protein = p.Nutriments.Proteins100g * factor,
+                carbs = p.Nutriments.Carbs100g * factor,
+                fat = p.Nutriments.Fat100g * factor
             });
+            return Ok(results);
         }
 
         // 🧾 Sample/test response

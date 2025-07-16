@@ -24,7 +24,7 @@
     <button class="btn btn-danger btn-sm mt-2" type="button" id="closeScanner">Close</button>
 </div>
 
-<div class="input-group mb-3">
+<div class="input-group mb-3" hidden >
     <input type="text" id="nutrientQuery" class="form-control" placeholder="Enter food name for nutrients" />
     <input type="number" id="nutrientGrams" class="form-control" placeholder="Grams" min="1" />
     <button class="btn btn-success" type="button" id="nutrientsBtn">Get Nutrients</button>
@@ -131,37 +131,50 @@
             const resEl = document.getElementById('result');
             resEl.textContent = 'Searching...';
             try {
-               const res = await fetch(`/api/OpenFood/search?query=${encodeURIComponent(q)}${g ? `&grams=${encodeURIComponent(g)}` : ''}`);
+                const res = await fetch(`/api/OpenFood/search?query=${encodeURIComponent(q)}${g ? `&grams=${encodeURIComponent(g)}` : ''}`);
                 if (!res.ok) {
                     resEl.textContent = 'Food not found.';
                     return;
                 }
-                const data = await res.json();
-                resEl.innerHTML = `<h5>${data.name}</h5>
-                 <p>For ${data.grams}g</p>
-                    <ul>
-                          <li>Calories: ${data.calories ?? 'N/A'}</li>
-                        <li>Protein: ${data.protein ?? 'N/A'}</li>
-                        <li>Carbs: ${data.carbs ?? 'N/A'}</li>
-                        <li>Fat: ${data.fat ?? 'N/A'}</li>
-                    </ul>
-                    <button id="addBtn" class="btn btn-primary mt-2">Add to Macros</button>`;
-                document.getElementById('addBtn').addEventListener('click', async () => {
-                    const payload = {
-                        carbsGrams: Math.round(data.carbs ?? 0),
-                        proteinGrams: Math.round(data.protein ?? 0),
-                        fatGrams: Math.round(data.fat ?? 0)
-                    };
-                    const addRes = await fetch('/api/macroentries', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
+                   const list = await res.json();
+                if(!Array.isArray(list) || list.length === 0){
+                    resEl.textContent = 'Food not found.';
+                    return;
+                }
+                resEl.innerHTML = '';
+                list.forEach(item => {
+                    const card = document.createElement('div');
+                    card.className = 'card mb-2';
+                    card.innerHTML = `<div class="card-body">
+                        <h5>${item.name}</h5>
+                        <p>For ${item.grams}g</p>
+                        <ul>
+                            <li>Calories: ${item.calories ?? 'N/A'}</li>
+                            <li>Protein: ${item.protein ?? 'N/A'}</li>
+                            <li>Carbs: ${item.carbs ?? 'N/A'}</li>
+                            <li>Fat: ${item.fat ?? 'N/A'}</li>
+                        </ul>
+                        <button class="btn btn-primary addBtn">Add to Macros</button>
+                    </div>`;
+                    resEl.appendChild(card);
+                    card.querySelector('.addBtn').addEventListener('click', async () => {
+                        const payload = {
+                            carbsGrams: Math.round(item.carbs ?? 0),
+                            proteinGrams: Math.round(item.protein ?? 0),
+                            fatGrams: Math.round(item.fat ?? 0)
+                        };
+                        const addRes = await fetch('/api/macroentries', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
+                        });
+                        if(addRes.ok){
+                            card.insertAdjacentHTML('beforeend', '<div class="alert alert-success mt-2">Entry added!</div>');
+                        } else {
+                            card.insertAdjacentHTML('beforeend', '<div class="alert alert-danger mt-2">Failed to add.</div>');
+                        }
                     });
-                    if(addRes.ok){
-                        resEl.insertAdjacentHTML('beforeend', '<div class="alert alert-success mt-2">Entry added!</div>');
-                    } else {
-                        resEl.insertAdjacentHTML('beforeend', '<div class="alert alert-danger mt-2">Failed to add.</div>');
-                    }
+                  
                 });
             } catch {
                 resEl.textContent = 'Error contacting server.';
