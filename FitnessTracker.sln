@@ -5,6 +5,8 @@ VisualStudioVersion = 17.14.36203.30 d17.14
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FitnessTracker", "FitnessTracker.csproj", "{528F0D48-7787-49BC-BB91-747CD30BB623}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FitnessTracker.Mobile", "FitnessTracker.Mobile\FitnessTracker.Mobile.csproj", "{B1B736E6-0C92-4EB2-945F-8BF77244FD28}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{528F0D48-7787-49BC-BB91-747CD30BB623}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{528F0D48-7787-49BC-BB91-747CD30BB623}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{528F0D48-7787-49BC-BB91-747CD30BB623}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B1B736E6-0C92-4EB2-945F-8BF77244FD28}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B1B736E6-0C92-4EB2-945F-8BF77244FD28}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B1B736E6-0C92-4EB2-945F-8BF77244FD28}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B1B736E6-0C92-4EB2-945F-8BF77244FD28}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
